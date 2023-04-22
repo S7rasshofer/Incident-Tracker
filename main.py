@@ -9,7 +9,6 @@ import tkinter as tk
 import openpyxl
 import getpass
 import pandas as pd
-from PIL import Image, ImageTk
 from tkinter import ttk
 from tkinter import messagebox
 from tkcalendar import Calendar
@@ -22,7 +21,7 @@ import shutil
 
 # creating a window
 root = tk.Tk()
-root.iconphoto(False, tk.PhotoImage(file='TU.png'))
+#root.iconphoto(False, tk.PhotoImage(file='TU.png'))
 user = getpass.getuser()
 
 #------------------------------------------------------------------------------
@@ -38,7 +37,9 @@ root.tk.call("source", "forest-light.tcl")
 root.tk.call("source", "forest-dark.tcl")
 style.theme_use("forest-dark")
 
+
 # define options in comboboxs
+#------------------------------------------------------------------------------
 dept_list = ["Shipping","Receiving","Sortation","ORC", "OBE/PPS", "Triage","Service","Quality Assurance"]
 reason_list = {
     'Quality Assurance' : ['Safety','SOP Deviation','Transfer Audits','Incorrect IA','Over-Receive D/R'],
@@ -52,6 +53,38 @@ reason_list = {
     'External' : ['Safety', 'SOP Deviation',]
 }
 
+#Create and plce file in your documents folder
+#------------------------------------------------------------------------------
+
+
+qaf_master = "C:\\Users\\Strasshofer\\Documents\\Programming\\Python Scripts\\Incident Tracker\\QAF.xlsx"
+qaf_doc = 'QAF.docx'
+store = 'store.txt'
+file_path = os.path.join(os.path.expanduser('~'), 'Documents/QAF', qaf_doc)
+store_path = os.path.join(os.path.expanduser('~'), 'Documents/QAF', store)
+
+if os.path.exists(file_path):
+    pass
+else:
+    # Copy the file from the project folder to the Documents folder
+    project_file_path = qaf_doc
+    shutil.copyfile(project_file_path, file_path)
+    messagebox.showinfo("New File", "A new Word Doc file named QAF.docx has been added to your Documents folder.")
+    
+if os.path.exists(store_path):
+    pass
+else:
+    # Copy the file from the project folder to the Documents folder
+    store_file_path = store
+    shutil.copyfile(store_file_path, store_path)
+    messagebox.showinfo("New File", "A new file named store.txt has been added to your Documents folder. /n This will store your location number for tracking.")
+
+def open_store_file():
+    os.startfile(store_path)
+    messagebox.showinfo("Friendly Reminder","Dont forget to save! No need to worry where to save to.")
+    
+
+
 # Update the options of the reason_combobox based on the selected department
 def update_reason_options(event):
     selected_dept = dept_combobox.get()
@@ -63,7 +96,7 @@ def update_reason_options(event):
         reason_combobox.config(values=[])
 
 def load_data():
-    path = "C:\\Users\\Strasshofer\\Documents\\Programming\\Python Scripts\\QAF Tracker\\QAF.xlsx"
+    path = qaf_master
     workbook = openpyxl.load_workbook(path)
     sheet = workbook.active
     list_values = list(sheet.values)
@@ -80,49 +113,20 @@ def filter_by_user(user):
         if treeview.item(row)["values"][1] != user:
             treeview.delete(row)
 
+
+#------------------------------------------------------------------------------
 def update_treeview():
     # Clear treeview
     treeview.delete(*treeview.get_children())
-
-    # Read data from Excel file
-    df = pd.read_excel("data.xlsx")
-
-    # Filter data based on current user
-    df = df.loc[df["user"] == user]
-
-    # Insert data into treeview
-    for index, row in df.iterrows():
+    df = pd.read_excel("QAF.xlsx") # Read data from Excel file
+    df = df.loc[df["user"] == user]  # Filter data based on current user
+    for index, row in df.iterrows():  # Insert data into treeview
         treeview.insert("", "end", values=row.to_list())
+#------------------------------------------------------------------------------
 
-def insert_row():
-    location = location_number
-    user = getpass.getuser()
-    submit_date = date.today().strftime("%d-%m-%y")
-    date_of_issue = cal.get_date() # call get_date() instead of get()
-    associate = associate_entry.get()   
-    department = dept_combobox.get()
-    reason = reason_combobox.get()
-    shrink_taken = "yes" if a.get() else "no"
-    cost = cost_entry.get()
-    research = research_entry.get()
-    correction = correction_entry.get()
-    
-    print(location, user, submit_date, date_of_issue, associate, department, reason, shrink_taken, cost, research, correction)
-
-    # Insert row into Excel sheet
-    path = "C:\\Users\\Strasshofer\\Documents\\Programming\\Python Scripts\\QAF Tracker\\QAF.xlsx"
-    workbook = openpyxl.load_workbook(path)
-    sheet = workbook.active
-    row_values = [location, user, submit_date, date_of_issue, associate, department, reason, shrink_taken, cost, research, correction]
-    sheet.append(row_values)
-    workbook.save(path)
-
-    # Insert row into treeview
-    treeview.insert('', tk.END, values=row_values)
    
 
 def clear_inputs():
-    # Clear the values
     associate_entry.delete(0, "end")
     associate_entry.insert(0, "Associate")
     dept_combobox.set(dept_list[0])
@@ -156,15 +160,18 @@ def delete_row():
     selection = treeview.selection()
     for item in selection:
         treeview.delete(item)
+
+
         
-def print_inputs():
+def render_inputs():
+    issue_date = cal.get_date()
+    formatted_date = issue_date.strftime("%d-%m-%y")
     doc_filename = "QAF.docx"
     doc_path = os.path.join(os.path.expanduser("~"), "Documents", "QAF", doc_filename)
     save_path = os.path.join(os.path.expanduser("~"), "Documents", "QAF", 'output.docx')
     doc = DocxTemplate(doc_path)
-
     submit_date = date.today().strftime("%d-%m-%y")
-    date_of_issue = cal.get_date() # call get_date() instead of get()
+    date_of_issue = formatted_date
     associate = associate_entry.get()   
     department = dept_combobox.get()
     reason = reason_combobox.get()
@@ -185,70 +192,75 @@ def print_inputs():
     doc.save(save_path)
     os.startfile(save_path)
 
+def insert_row():
+    issue_date = cal.get_date()
+    formatted_date = issue_date.strftime("%d-%m-%y")
+    
+    with open(store_path, 'r') as f:
+        location = f.read()
+    
+    user = getpass.getuser()
+    submit_date = date.today().strftime("%d-%m-%y")
+    date_of_issue = formatted_date
+    associate = associate_entry.get()   
+    department = dept_combobox.get()
+    reason = reason_combobox.get()
+    shrink_taken = "yes" if a.get() else "no"
+    cost = cost_entry.get()
+    research = research_entry.get()
+    correction = correction_entry.get()
+    
+    print(location, user, submit_date, date_of_issue, associate, department, reason, shrink_taken, cost, research, correction)
 
+    # Insert row into Excel sheet
+    path = qaf_master
+    workbook = openpyxl.load_workbook(path)
+    sheet = workbook.active
+    row_values = [location, user, submit_date, date_of_issue, associate, department, reason, shrink_taken, cost, research, correction]
+    sheet.append(row_values)
+    workbook.save(path)
+
+    # Insert row into treeview
+    treeview.insert('', tk.END, values=row_values)
+
+
+
+#Starting the Gui
+#------------------------------------------------------------------------------
 frame = ttk.Frame(root)
 frame.pack()
 
 
-def get_location_number():
-    global location_number
-    location_number = location_number_entry.get()
-    location_number_window.destroy()
-
-def on_submit_click(event=None):
-    get_location_number()
-
-file_name = 'QAF.docx'
-store = 'store.txt'
-file_path = os.path.join(os.path.expanduser('~'), 'Documents/QAF', file_name)
-
-if os.path.exists(file_path):
-    pass
-else:
-    # Copy the file from the project folder to the Documents folder
-    project_file_path = file_name
-    shutil.copyfile(project_file_path, file_path)
-    messagebox.showinfo("New File", "A new Word Doc file named QAF.docx has been added to your Documents folder.")
-
-
-
 #------------------------------------------------------------------------------
-# Create a popup window for location number input
-location_number_window = tk.Toplevel()
-location_number_window.wm_attributes("-topmost", 2)
-location_number_window.title("Location")
+menu_bar = tk.Menu(root)
 
-# Create a label for instructions
-location_number_label = tk.Label(location_number_window, text="Enter the location number:")
-location_number_label.pack(padx=10, pady=10)
+# create a file menu
+file_menu = tk.Menu(menu_bar, tearoff=0)
+file_menu.add_command(label="New")
+file_menu.add_command(label="Open")
+file_menu.add_command(label="Save")
+file_menu.add_separator()
+file_menu.add_command(label="Exit", command=root.quit)
 
-window_width = 300
-window_height = 150
+# create a settings menu
+settings_menu = tk.Menu(menu_bar, tearoff=0)
+settings_menu.add_command(label="Update Location", command=open_store_file)
+settings_menu.add_command(label="Advanced Settings")
 
-# Get the screen width and height
-screen_width = location_number_window.winfo_screenwidth()
-screen_height = location_number_window.winfo_screenheight()
+# add the menus to the menu bar
+menu_bar.add_cascade(label="File", menu=file_menu)
+menu_bar.add_cascade(label="Settings", menu=settings_menu)
 
-x = int((screen_width/2) - (window_width/2))
-y = int((screen_height/2) - (window_height/2))
+# set the menu bar for the root window
+root.config(menu=menu_bar)
 
-# Set the geometry of the popup window
-location_number_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
-# Create an entry widget for location number input
-location_number_entry = tk.Entry(location_number_window)
-location_number_entry.pack(padx=10, pady=5)
-location_number_entry.bind('<Return>', on_submit_click)
 
-# Create a button to submit the location number
-submit_button = tk.Button(location_number_window, text="Submit", command=get_location_number)
-submit_button.pack(padx=10, pady=10)
 
+#Inputs 
 #------------------------------------------------------------------------------
 
-
-
-# outlines Options under first column
+# outlines left first column
 widgets_frame = ttk.LabelFrame(frame, text = "Insert Row")
 widgets_frame.grid(row = 0, column = 0, padx=20, pady=10)
 
@@ -258,7 +270,6 @@ associate_entry.bind("<FocusIn>", lambda e: associate_entry.selection_range(0, t
 #associate_entry.bind("<FocusIn>", lambda e: associate_entry.delete('0', 'end')) # deletes contents 
 associate_entry.grid(row=1, column = 0, padx=5, pady=5, sticky="ew") # displays textbox 
 
-
 dept_combobox = ttk.Combobox(widgets_frame, values=dept_list, font = 'dokchampa')
 dept_combobox.current(0)
 dept_combobox.grid(row=2, column=0, padx=5, pady=5,  sticky="ew")
@@ -267,8 +278,6 @@ dept_combobox.bind("<<ComboboxSelected>>", update_reason_options)
 reason_combobox = ttk.Combobox(widgets_frame, values="Select_Dept.", font = 'dokchampa')
 reason_combobox.current(0)
 reason_combobox.grid(row=3, column=0, padx=5, pady=5,  sticky="ew")
-
-
 
 #Create a button to open the calendar
 select_date_button = tk.Button(widgets_frame, text="Date of Issue", 
@@ -304,14 +313,20 @@ correction_entry.bind("<FocusIn>", lambda e: correction_entry.selection_range(0,
 correction_entry.grid(row=9, column = 0, padx=5, pady=5, sticky="ew")
 correction_entry.lower()
 
+
+#Buttons
 #------------------------------------------------------------------------------
+
 sub_button = ttk.Button(widgets_frame, text = "Submit", command = insert_row, width = 11)
 sub_button.grid(row=10, column=0, padx=5, pady=5, sticky="w")
-clear_button = ttk.Button(widgets_frame, text = "Clear", command = clear_inputs, width = 11)
+clear_button = ttk.Button(widgets_frame, text = "Clear Inputs", command = clear_inputs, width = 11)
 clear_button.grid(row=10, column=0, padx=5, pady=5, sticky="e")
+
 del_button = ttk.Button(widgets_frame, text = "Delete", command = delete_row, width = 11)
 del_button.grid(row=11, column=0, padx=5, pady=5, sticky="e")
-print_button = ttk.Button(widgets_frame, text = "Render", command = print_inputs, width = 11)
+
+
+print_button = ttk.Button(widgets_frame, text = "Render", command = render_inputs, width = 11)
 print_button.grid(row=11, column=0, padx=5, pady=5, sticky="w")
 
 mode_switch = ttk.Checkbutton(
@@ -319,6 +334,7 @@ mode_switch = ttk.Checkbutton(
 mode_switch.grid(row=12, column=0, padx=5, pady=10, sticky="nsew")
 
 
+#Excel Viewer
 #------------------------------------------------------------------------------
 treeFrame = ttk.Frame(frame)
 treeFrame.grid(row=0, column=1, pady=10)
@@ -332,7 +348,7 @@ treeview = ttk.Treeview(treeFrame, show="headings",
 
 treeview.column("location", minwidth=0, width=0)
 treeview.column("user", minwidth=0, width=0)
-treeview.column("submit_date", width=80)
+treeview.column("submit_date", minwidth=0, width=0)
 treeview.column("date_of_issue", width=80)
 treeview.column("associate", width=90)
 treeview.column("department", width=80)
