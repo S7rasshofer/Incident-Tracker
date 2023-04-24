@@ -46,7 +46,7 @@ reason_list = {
     'Shipping' : ['Safety', 'SOP Deviation','QA Found','Mis-Placed Pallet'],
     'Receiving' : ['Safety', 'SOP Deviation', 'Accuracy','Over Received','Miss Labeled'],
     'Sortation' : ['Safety', 'SOP Deviation','QA Found'],
-    'ORC' : ['Safety', 'SOP Deviation','Transfer Creation','Incorrect IA','Incorrect IA request','Incorrect SKU '],
+    'Returns' : ['Safety', 'SOP Deviation','Transfer Creation','Incorrect IA','Incorrect IA request','Incorrect SKU '],
     'OBE/PPS' : ['Safety', 'SOP Deviation','Transfer Creation'],
     'Testing' : ['Safety', 'SOP Deviation','Boxing'],
     'Service' : ['Safety', 'SOP Deviation',],
@@ -81,7 +81,11 @@ else:
 
 def open_store_file():
     os.startfile(store_path)
-    messagebox.showinfo("Friendly Reminder","Dont forget to save! No need to worry where to save to.")
+    messagebox.showinfo("Friendly Reminder","Dont forget to save! \nDo not move the file.")
+
+def open_qaf_file():
+    os.startfile(file_path)
+    messagebox.showinfo("Friendly Reminder","Dont forget to save! \nDo not move the file.")
     
 
 
@@ -245,11 +249,11 @@ file_menu.add_command(label="Exit", command=root.quit)
 # create a settings menu
 settings_menu = tk.Menu(menu_bar, tearoff=0)
 settings_menu.add_command(label="Update Location", command=open_store_file)
-settings_menu.add_command(label="Advanced Settings")
+settings_menu.add_command(label="Update QAF File", command=open_qaf_file)
 
 # add the menus to the menu bar
 menu_bar.add_cascade(label="File", menu=file_menu)
-menu_bar.add_cascade(label="Settings", menu=settings_menu)
+menu_bar.add_cascade(label="Update Files", menu=settings_menu)
 
 # set the menu bar for the root window
 root.config(menu=menu_bar)
@@ -303,14 +307,15 @@ cost_entry.lower()
 
 research_entry = ttk.Entry(widgets_frame, font = 'dokchampa')
 research_entry.insert(0, "Research")
-research_entry.bind("<FocusIn>", lambda e: research_entry.selection_range(0, tk.END))
+research_entry.bind("<FocusIn>", lambda e: research_entry.selection_range(0, tk.END) )
 research_entry.grid(row=8, column = 0, padx=5, pady=5, sticky="ew")
 research_entry.lower()
+
 
 correction_entry = ttk.Entry(widgets_frame, font = 'dokchampa')
 correction_entry.insert(0, "Coaching/Suggestions")
 correction_entry.bind("<FocusIn>", lambda e: correction_entry.selection_range(0, tk.END))
-correction_entry.grid(row=9, column = 0, padx=5, pady=5, sticky="ew")
+correction_entry.grid(row=11, column = 0, padx=5, pady=5, sticky="ew")
 correction_entry.lower()
 
 
@@ -318,20 +323,20 @@ correction_entry.lower()
 #------------------------------------------------------------------------------
 
 sub_button = ttk.Button(widgets_frame, text = "Submit", command = insert_row, width = 11)
-sub_button.grid(row=10, column=0, padx=5, pady=5, sticky="w")
+sub_button.grid(row=12, column=0, padx=5, pady=5, sticky="w")
 clear_button = ttk.Button(widgets_frame, text = "Clear Inputs", command = clear_inputs, width = 11)
-clear_button.grid(row=10, column=0, padx=5, pady=5, sticky="e")
+clear_button.grid(row=12, column=0, padx=5, pady=5, sticky="e")
 
 del_button = ttk.Button(widgets_frame, text = "Delete", command = delete_row, width = 11)
-del_button.grid(row=11, column=0, padx=5, pady=5, sticky="e")
+del_button.grid(row=13, column=0, padx=5, pady=5, sticky="e")
 
 
 print_button = ttk.Button(widgets_frame, text = "Render", command = render_inputs, width = 11)
-print_button.grid(row=11, column=0, padx=5, pady=5, sticky="w")
+print_button.grid(row=13, column=0, padx=5, pady=5, sticky="w")
 
 mode_switch = ttk.Checkbutton(
     widgets_frame, text = "Theme", style = "Switch", command = toggle_mode)
-mode_switch.grid(row=12, column=0, padx=5, pady=10, sticky="nsew")
+mode_switch.grid(row=14, column=0, padx=5, pady=10, sticky="nsew")
 
 
 #Excel Viewer
@@ -357,8 +362,6 @@ treeview.column("shrink_taken", minwidth=0, width=0)
 treeview.column("cost", minwidth=0, width=0)
 treeview.column("research", width=150)
 treeview.column("correction", width=150)
-
-
 
 treeview.pack()
 treeScroll.config(command=treeview.yview)
