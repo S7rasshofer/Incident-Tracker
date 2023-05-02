@@ -9,13 +9,13 @@ import tkinter as tk
 import openpyxl
 import getpass
 import pandas as pd
-from tkinter import ttk
-from tkinter import messagebox
-from tkcalendar import Calendar
-from datetime import date
-from docxtpl import DocxTemplate
 import os
 import shutil
+from tkinter import ttk, messagebox
+from tkcalendar import Calendar
+from datetime import date, datetime
+from docxtpl import DocxTemplate
+
 
 
 
@@ -60,8 +60,8 @@ reason_list = {
 qaf_master = "C:\\Users\\Strasshofer\\Documents\\Programming\\Python Scripts\\Incident Tracker\\QAF.xlsx"
 qaf_doc = 'QAF.docx'
 store = 'store.txt'
-file_path = os.path.join(os.path.expanduser('~'), 'Documents/QAF', qaf_doc)
-store_path = os.path.join(os.path.expanduser('~'), 'Documents/QAF', store)
+file_path = os.path.join(os.path.expanduser('~'), 'Documents', qaf_doc)
+store_path = os.path.join(os.path.expanduser('~'), 'Documents', store)
 
 if os.path.exists(file_path):
     pass
@@ -171,8 +171,8 @@ def render_inputs():
     issue_date = cal.get_date()
     formatted_date = issue_date.strftime("%d-%m-%y")
     doc_filename = "QAF.docx"
-    doc_path = os.path.join(os.path.expanduser("~"), "Documents", "QAF", doc_filename)
-    save_path = os.path.join(os.path.expanduser("~"), "Documents", "QAF", 'output.docx')
+    doc_path = os.path.join(os.path.expanduser("~"), "Documents", doc_filename)
+    save_path = os.path.join(os.path.expanduser("~"), "Documents", 'output.docx')
     doc = DocxTemplate(doc_path)
     submit_date = date.today().strftime("%d-%m-%y")
     date_of_issue = formatted_date
@@ -198,14 +198,14 @@ def render_inputs():
 
 def insert_row():
     issue_date = cal.get_date()
-    formatted_date = issue_date.strftime("%d-%m-%y")
+
     
     with open(store_path, 'r') as f:
         location = f.read()
     
     user = getpass.getuser()
-    submit_date = date.today().strftime("%d-%m-%y")
-    date_of_issue = formatted_date
+    submit_date = date.today()
+    date_of_issue = issue_date
     associate = associate_entry.get()   
     department = dept_combobox.get()
     reason = reason_combobox.get()
@@ -284,9 +284,9 @@ reason_combobox.current(0)
 reason_combobox.grid(row=3, column=0, padx=5, pady=5,  sticky="ew")
 
 #Create a button to open the calendar
-select_date_button = tk.Button(widgets_frame, text="Date of Issue", 
+select_date_button = tk.Button(widgets_frame, text="Date Occured", 
                             command=lambda: cal.place(relx=0.5, 
-                            rely=0.5, anchor=tk.CENTER), font = 'dokchampa')    # Create a label to display the selected date
+                            rely=0.5, anchor=tk.CENTER), font = 'dokchampa')    # Create a button to select the date
 issue_date = tk.Label(widgets_frame, text="Selected date: None")
 cal = Calendar(widgets_frame, selectmode="day", date_pattern="mm-dd-yy")# Create the calendar widget
 cal.bind("<<CalendarSelected>>", lambda event: [cal.place_forget(), show_selected_date()])# Attach the calendar to the button and hide it initially
@@ -366,11 +366,6 @@ treeview.column("correction", width=150)
 treeview.pack()
 treeScroll.config(command=treeview.yview)
 load_data()
-
-
-
-
-
 
 
 root.mainloop()
